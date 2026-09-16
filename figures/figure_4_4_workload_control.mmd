@@ -1,0 +1,88 @@
+---
+title: "Figure 4.4 — Workload, Execution, and Metrics"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "28px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 60
+    rankSpacing: 90
+---
+flowchart LR
+
+    %% ① Deterministic workload
+    subgraph WL["① Deterministic Workload"]
+        direction TB
+        SCN["<b>Scenario</b><br/>THIN · THICK · SHOCK"]
+        SEED["<b>Seed</b><br/>Mulberry32 RNG"]
+        GEN["<b>OrderIntentGenerator.generate()</b><br/>open-loop · materialised up-front"]
+        INTENTS["<b>OrderIntent[]</b><br/>fixed stream — identical<br/>across all three engines"]
+        SCN --> GEN
+        SEED --> GEN
+        GEN --> INTENTS
+    end
+
+    %% ② Parallel replay — same intents, different engines
+    subgraph REPLAY["② Replay Against Each Mechanism"]
+        direction TB
+        CLOB["<b>CLOB</b><br/>processOrder loop"]
+        LMSR["<b>LMSR</b><br/>processOrder loop"]
+        HYB["<b>HYBRID</b><br/>processOrder loop"]
+    end
+
+    INTENTS --> CLOB
+    INTENTS --> LMSR
+    INTENTS --> HYB
+
+    %% ③ Per-run trace
+    subgraph TRACE["③ Per-Run Trace"]
+        direction TB
+        RES["<b>ExecutionResult[]</b>"]
+        SNAP["<b>Snapshot[]</b><br/>post-order market state"]
+        LOGS["<b>LogEntry[]</b>"]
+    end
+
+    CLOB --> RES
+    LMSR --> RES
+    HYB --> RES
+    CLOB --> SNAP
+    LMSR --> SNAP
+    HYB --> SNAP
+    CLOB --> LOGS
+    LMSR --> LOGS
+    HYB --> LOGS
+
+    %% ④ Common metrics path
+    subgraph MET["④ Common Metrics Path"]
+        direction TB
+        COMP["<b>computeMetrics</b><br/>identical for all engines"]
+        OUT["<b>SimulationMetrics</b><br/>fill · slippage · impact<br/>spread · depth · price series"]
+        COMP --> OUT
+    end
+
+    RES --> COMP
+    SNAP --> COMP
+    LOGS --> COMP
+
+    %% Cross-run note
+    REPLAY -. "repeat for each seed" .-> CLOB
+
+    %% Styling
+    classDef wlStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef engStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef traceStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef metStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+
+    class SCN,SEED,GEN,INTENTS wlStyle
+    class CLOB,LMSR,HYB engStyle
+    class RES,SNAP,LOGS traceStyle
+    class COMP,OUT metStyle

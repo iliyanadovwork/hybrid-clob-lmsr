@@ -1,0 +1,77 @@
+---
+title: "Figure 5.2 — Hybrid Shared-Position Synchronisation Cycle"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "26px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 60
+    rankSpacing: 85
+---
+flowchart TB
+
+    %% Authoritative store
+    SHARED["<b>sharedPositions</b><br/>Map&lt;traderId,<br/>{ cash · yesShares · noShares }&gt;<br/><i>controller-owned, authoritative</i>"]
+
+    %% Step 1: Baseline
+    BASELINE["<b>① Capture baseline</b><br/>snapshot {cash, YES, NO}<br/>before execution"]
+
+    %% Step 2: Project into engines
+    subgraph PROJ["② Project shared → engine ledgers"]
+        direction LR
+        CL1["<b>clobLedger.traders</b><br/>cash · YES · NO<br/>← overwritten from shared"]
+        LM1["<b>lmsrLedger.traders</b><br/>cash · YES · NO<br/>← overwritten from shared"]
+    end
+
+    %% Step 3: Execution
+    subgraph EXEC["③ Execution on one or both venues"]
+        direction LR
+        CL_EX["<b>CLOB execution</b><br/>tryExecuteOnCLOB<br/>mutates clobLedger"]
+        LM_EX["<b>LMSR execution</b><br/>executeOnLMSR<br/>mutates lmsrLedger"]
+    end
+
+    %% Step 4: Read deltas
+    READ["<b>④ Read deltas from both engines</b><br/>clobDelta = clobTrader − baseline<br/>lmsrDelta = lmsrTrader − baseline"]
+
+    %% Step 5: Fold into shared
+    FOLD["<b>⑤ Fold into shared</b><br/>shared.yesShares = baseline.YES + clobΔ + lmsrΔ<br/>shared.noShares  = baseline.NO  + clobΔ + lmsrΔ<br/>shared.cash = <i>last-engine-used</i>.cash"]
+
+    %% Step 6: Broadcast
+    subgraph BCAST["⑥ Broadcast shared → both ledgers"]
+        direction LR
+        CL2["<b>clobLedger.traders</b><br/>cash · YES · NO<br/>← overwritten from shared"]
+        LM2["<b>lmsrLedger.traders</b><br/>cash · YES · NO<br/>← overwritten from shared"]
+    end
+
+    %% Flow
+    SHARED --> BASELINE
+    BASELINE --> PROJ
+    CL1 --> CL_EX
+    LM1 --> LM_EX
+    CL_EX --> READ
+    LM_EX --> READ
+    READ --> FOLD
+    FOLD --> SHARED
+    SHARED -. "post-update" .-> BCAST
+
+    %% Styling
+    classDef sharedStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:3px,color:#3d2500
+    classDef stepStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef clobStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef lmsrStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef foldStyle fill:#fff1b3,stroke:#8a6d00,stroke-width:2px,color:#3d2500
+
+    class SHARED sharedStyle
+    class BASELINE,READ stepStyle
+    class CL1,CL_EX,CL2 clobStyle
+    class LM1,LM_EX,LM2 lmsrStyle
+    class FOLD foldStyle

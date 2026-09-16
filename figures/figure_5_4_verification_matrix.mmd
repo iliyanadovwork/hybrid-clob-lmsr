@@ -1,0 +1,91 @@
+---
+title: "Figure 5.4 — Verification Coverage Matrix"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "22px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: linear
+    nodeSpacing: 25
+    rankSpacing: 35
+---
+flowchart TB
+
+    subgraph HDR["&nbsp;"]
+        direction LR
+        H0["<b>Concern \\ Target</b>"]
+        H1["<b>CLOB</b><br/>src/lib/clob.ts"]
+        H2["<b>LMSR</b><br/>src/lib/binaryLmsr.ts"]
+        H3["<b>Hybrid</b><br/>src/lib/hybrid-router-v2.ts"]
+        H4["<b>Runner</b><br/>src/lib/simulation.ts"]
+        H0 ~~~ H1 ~~~ H2 ~~~ H3 ~~~ H4
+    end
+
+    subgraph R1["① Mathematical / numerical correctness"]
+        direction LR
+        R1L["cost fn, pricing,<br/>rounding, extreme q"]
+        R1C1["<i>— implicit via<br/>property tests</i>"]
+        R1C2["<b>binaryLmsr.math</b> (425)<br/><b>.numerical</b> (477)<br/><b>.risk</b> (358)"]
+        R1C3["<i>inherits LMSR<br/>+ CLOB coverage</i>"]
+        R1C4["<i>n/a</i>"]
+        R1L ~~~ R1C1 ~~~ R1C2 ~~~ R1C3 ~~~ R1C4
+    end
+
+    subgraph R2["② Behavioural invariants (property-based)"]
+        direction LR
+        R2L["price-time priority<br/>accounting identities<br/>path independence"]
+        R2C1["<b>clob.property</b> (963<br/>lines, 12 fc. props)<br/><b>clob.test</b> (1298)"]
+        R2C2["<b>binaryLmsr.accounting</b><br/>(470) · <b>.trading</b> (438)<br/><b>binaryLmsr.test</b> (949)"]
+        R2C3["<b>hybrid-router-v2.test</b><br/>(517) — routing +<br/>shared-position invariants"]
+        R2C4["<i>n/a</i>"]
+        R2L ~~~ R2C1 ~~~ R2C2 ~~~ R2C3 ~~~ R2C4
+    end
+
+    subgraph R3["③ Regression (deterministic replay)"]
+        direction LR
+        R3L["fixed-seed snapshots<br/>reference-model<br/>differential"]
+        R3C1["<b>clob.golden</b> (581)<br/><b>clob.differential</b> (746)"]
+        R3C2["<b>binaryLmsr.regression</b><br/>(565)"]
+        R3C3["<b>hybrid-router-v2.<br/>comprehensive</b> — golden<br/>regression + determinism<br/>sections"]
+        R3C4["<b>gap</b>"]
+        R3L ~~~ R3C1 ~~~ R3C2 ~~~ R3C3 ~~~ R3C4
+    end
+
+    subgraph R4["④ Composition (routing + shared-position sync)"]
+        direction LR
+        R4L["CLOB→LMSR fallback<br/>baseline + deltas fold<br/>cash broadcast"]
+        R4C1["<i>n/a</i>"]
+        R4C2["<i>n/a</i>"]
+        R4C3["<b>hybrid-router-v2.<br/>comprehensive</b> (908)"]
+        R4C4["<b>gap</b>"]
+        R4L ~~~ R4C1 ~~~ R4C2 ~~~ R4C3 ~~~ R4C4
+    end
+
+    TOT["<b>13 test files · 8 695 lines total</b><br/>LMSR: 6 files / 3 682 lines · CLOB: 4 files / 3 588 lines · Hybrid: 2 files / 1 425 lines · Runner: 0"]
+
+    HDR --> R1 --> R2 --> R3 --> R4 --> TOT
+
+    classDef headerStyle fill:#111111,stroke:#000000,stroke-width:2px,color:#ffffff
+    classDef rowLabelStyle fill:#fafafa,stroke:#555555,stroke-width:1px,color:#111111
+    classDef clobStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef lmsrStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef hybStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef gapStyle fill:#ffd6d6,stroke:#b01010,stroke-width:2px,color:#3d0000
+    classDef totStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+
+    class H0,H1,H2,H3,H4 headerStyle
+    class R1L,R2L,R3L,R4L rowLabelStyle
+    class R1C1,R2C1,R3C1 clobStyle
+    class R1C2,R2C2,R3C2 lmsrStyle
+    class R2C3,R3C3,R4C3 hybStyle
+    class R1C3,R1C4,R4C1,R4C2 gapStyle
+    class R3C4,R4C4 gapStyle
+    class TOT totStyle

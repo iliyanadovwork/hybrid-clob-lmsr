@@ -1,0 +1,37 @@
+{
+  "name": "code",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "install-playwright": "npx playwright install chromium",
+    "experiment": "vitest run test/experiment.sweep.test.ts"
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0",
+    "next": "16.0.8",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "recharts": "^3.8.0"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/ui": "^4.0.15",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.8",
+    "fast-check": "^4.5.3",
+    "playwright": "^1.58.2",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.0.15"
+  }
+}

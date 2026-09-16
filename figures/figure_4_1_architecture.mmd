@@ -1,0 +1,117 @@
+---
+title: "Figure 4.1 — Overall System Architecture"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "22px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 55
+    rankSpacing: 75
+---
+flowchart TB
+
+    %% ---------- Layer 1: UI setup ----------
+    subgraph UI_IN["① Experiment Setup"]
+        direction LR
+        CFG["<b>Experiment Configuration</b><br/>scenarios · seeds · engine"]
+    end
+
+    %% ---------- Layer 2: Shared shell ----------
+    subgraph SHELL["② Shared Experimental Shell"]
+        direction TB
+        subgraph GEN["Workload Generation"]
+            direction LR
+            RNG["<b>Seeded RNG</b><br/>Mulberry32"]
+            SCN["<b>Scenarios</b><br/>THIN · THICK · SHOCK"]
+            WL["<b>Workload Generator</b><br/>open-loop intents"]
+        end
+        subgraph CORE["Core Abstractions"]
+            direction LR
+            DM["<b>Domain Model</b><br/>OrderIntent · FillInfo<br/>TraderState · Snapshot"]
+            API["<b>UnifiedEngine interface</b><br/>processOrder · getMarketState<br/>getLogs · addTrader"]
+        end
+    end
+
+    %% ---------- Layer 3: Engines ----------
+    subgraph ENG["③ Execution Mechanisms"]
+        direction LR
+        subgraph CLOB_STK["CLOB stack"]
+            direction TB
+            CLOB_A["<b>CLOB Adapter</b>"]
+            CLOB_C["<b>CLOB Core</b><br/>price-time priority book"]
+            CLOB_A --> CLOB_C
+        end
+        subgraph HYB_STK["Hybrid stack"]
+            direction TB
+            HYB["<b>Hybrid Router V2</b><br/>CLOB-first · LMSR fallback<br/>composes CLOB + LMSR cores"]
+        end
+        subgraph LMSR_STK["LMSR stack"]
+            direction TB
+            LMSR_A["<b>LMSR Adapter</b>"]
+            LMSR_C["<b>LMSR Core</b><br/>logarithmic cost function"]
+            LMSR_A --> LMSR_C
+        end
+    end
+
+    %% ---------- Layer 4: Distributed logging ----------
+    LOG_STREAM["<b>Per-engine LogEntry streams</b><br/>each adapter / router owns logs[]"]
+
+    %% ---------- Layer 5: Dashboard ----------
+    subgraph UI_OUT["④ Results Dashboard"]
+        direction TB
+        AGG_FN["<b>In-dashboard Aggregation</b><br/>computeCellMetrics · aggregateMetrics<br/>pickWinners · routing-split parser"]
+        subgraph VIEWS["Views"]
+            direction LR
+            AGG_V["<b>Aggregate Metrics</b>"]
+            TS_V["<b>Time-Series Charts</b>"]
+            ROUTE_V["<b>Routing Split</b>"]
+            LOG_V["<b>Event Logs</b>"]
+        end
+        AGG_FN --> AGG_V
+        AGG_FN --> TS_V
+        AGG_FN --> ROUTE_V
+        AGG_FN --> LOG_V
+    end
+
+    %% ---------- Cross-layer control flow ----------
+    CFG --> RNG
+    CFG --> SCN
+    RNG --> WL
+    SCN --> WL
+    WL --> API
+    DM <--> API
+
+    API --> CLOB_A
+    API --> HYB
+    API --> LMSR_A
+
+    CLOB_A --> LOG_STREAM
+    HYB --> LOG_STREAM
+    LMSR_A --> LOG_STREAM
+    LOG_STREAM --> AGG_FN
+
+    %% ---------- Styling ----------
+    classDef uiStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef shellStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef engStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef coreStyle fill:#b9dfbf,stroke:#0f6b2d,stroke-width:1.8px,color:#0b2e15
+    classDef logStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef aggStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef outStyle fill:#ffeccc,stroke:#b36600,stroke-width:2px,color:#3d2500
+
+    class CFG uiStyle
+    class RNG,SCN,WL,DM,API shellStyle
+    class CLOB_A,HYB,LMSR_A engStyle
+    class CLOB_C,LMSR_C coreStyle
+    class LOG_STREAM logStyle
+    class AGG_FN aggStyle
+    class AGG_V,TS_V,ROUTE_V,LOG_V outStyle

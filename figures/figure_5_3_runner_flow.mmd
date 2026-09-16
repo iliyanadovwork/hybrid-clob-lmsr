@@ -1,0 +1,98 @@
+---
+title: "Figure 5.3 — Simulation Runner Flow"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "26px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 55
+    rankSpacing: 80
+---
+flowchart TB
+
+    %% ① Input
+    CFG["<b>ScenarioConfig</b><br/>seed · numTraders · engineType<br/>scenario params (thin/thick/shock)"]
+
+    %% ② Pre-processing stage
+    subgraph PRE["② Pre-processing (deterministic, pure)"]
+        direction TB
+        RNG["<b>new SeededRNG(seed)</b><br/>Mulberry32<br/>uniform · bounded · shaped draws"]
+        GEN["<b>new OrderIntentGenerator(config)</b><br/>arrival intensity · side bias<br/>order-type mix · price placement<br/>shock anchor shift (shock only)"]
+        INTENTS["<b>OrderIntent[]</b><br/>materialised up-front<br/>same seed → same stream"]
+        RNG --> GEN --> INTENTS
+    end
+
+    CFG --> RNG
+
+    %% ③ Setup
+    subgraph SETUP["③ Engine + trader setup"]
+        direction TB
+        INIT["<b>engine.initialize()</b><br/>engine.clearLogs()"]
+        TRADERS["<b>initializeTraders(config)</b><br/>starting cash · addTrader"]
+        SEED["<b>Conditional pre-seed</b><br/>30% YES · 30% NO shares<br/><i>CLOB and HYBRID_V2 only</i><br/>(LMSR mints via cost fn)"]
+        INIT --> TRADERS --> SEED
+    end
+
+    CFG --> INIT
+
+    %% ④ Execution loop
+    subgraph LOOP["④ Execution loop — for each intent"]
+        direction TB
+        PROC["<b>engine.processOrder(intent)</b><br/>→ ExecutionResult"]
+        SNAP["<b>engine.getMarketState()</b><br/>post-order Snapshot"]
+        LOGS["<b>engine.getLogs()</b> + clearLogs<br/>→ LogEntry[]"]
+        PROC --> SNAP --> LOGS
+    end
+
+    INTENTS --> PROC
+    SEED --> PROC
+
+    %% ⑤ Finalise + metrics
+    subgraph FIN["⑤ Finalise + metrics"]
+        direction TB
+        FINAL["<b>engine.getMarketState()</b><br/>engine.getAllTraderStates()"]
+        METRICS["<b>computeMetrics</b><br/>fill · slippage · impact<br/>spread / depth / price series"]
+        FINAL --> METRICS
+    end
+
+    LOOP --> FINAL
+
+    %% ⑥ Return
+    OUT["<b>SimulationOutput</b><br/>config · engineType · seed<br/>intents · results · snapshots<br/>finalTraderStates · logs · metrics"]
+    METRICS --> OUT
+
+    %% ⑦ Downstream in UI
+    subgraph DOWN["⑥ Downstream (src/app/experiments)"]
+        direction LR
+        AGG["<b>aggregateMetrics</b><br/>group by (scenario, engine)<br/>mean over seeds"]
+        DASH["<b>Dashboard views</b>"]
+        EXP["<b>Export (downloadBlob)</b><br/>JSON · CSV"]
+        AGG --> DASH
+        AGG --> EXP
+    end
+
+    OUT -. "push into RunRecord[]" .-> AGG
+
+    %% Styling
+    classDef inStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef preStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef setupStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef loopStyle fill:#fff1b3,stroke:#8a6d00,stroke-width:2px,color:#3d2500
+    classDef metStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef outStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+
+    class CFG inStyle
+    class RNG,GEN,INTENTS preStyle
+    class INIT,TRADERS,SEED setupStyle
+    class PROC,SNAP,LOGS loopStyle
+    class FINAL,METRICS metStyle
+    class OUT,AGG,DASH,EXP outStyle

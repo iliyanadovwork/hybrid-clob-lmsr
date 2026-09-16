@@ -1,0 +1,96 @@
+---
+title: "Figure 4.3 — Hybrid Routing Decision Flow"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "26px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 55
+    rankSpacing: 75
+---
+flowchart TB
+
+    START["<b>OrderIntent</b><br/>traderId · side · outcome<br/>orderType · qty · price?"]
+
+    %% ① Liquidity-based gate (checkCLOBConditions)
+    subgraph CHK["① Check CLOB Conditions"]
+        direction TB
+        C1{"spread ≤ maxSpread?<br/><i>default 0.05</i>"}
+        C2{"SELL side?"}
+        INV{"trader has<br/>outcome inventory?"}
+        C3{"MARKET order<br/>with minDepth &gt; 0?"}
+        C4{"depth at 3 ticks<br/>≥ minDepth?"}
+        C1 -- no --> USE_LMSR
+        C1 -- yes --> C2
+        C2 -- no (BUY) --> C3
+        C2 -- yes --> INV
+        INV -- no --> USE_LMSR
+        INV -- yes --> C3
+        C3 -- no (LIMIT) --> USE_CLOB
+        C3 -- yes --> C4
+        C4 -- no --> USE_LMSR
+        C4 -- yes --> USE_CLOB
+    end
+
+    START --> C1
+
+    USE_CLOB["<b>shouldUseCLOB = true</b>"]
+    USE_LMSR["<b>shouldUseCLOB = false</b><br/>CLOB skipped"]
+
+    %% ② CLOB execution
+    TRY["<b>tryExecuteOnCLOB</b><br/>placeLimitOrder /<br/>placeMarketOrder"]
+    USE_CLOB --> TRY
+
+    STATUS{"clobStatus"}
+    TRY --> STATUS
+
+    RESTED["<b>FILLED</b> or <b>OPEN</b> or<br/>LIMIT residual on book"]
+    MARKET_RES["<b>MARKET</b> with residual<br/>(book too thin)"]
+    REJECTED["<b>REJECTED</b>"]
+
+    STATUS --> RESTED
+    STATUS --> MARKET_RES
+    STATUS --> REJECTED
+
+    %% ③ Fallback decision
+    FB{"residual &gt; 0<br/>AND (CLOB skipped<br/>OR rejected<br/>OR MARKET)?"}
+
+    RESTED --> FB
+    MARKET_RES --> FB
+    REJECTED --> FB
+    USE_LMSR --> FB
+
+    LMSR["<b>executeOnLMSR(residual)</b><br/>quote via binary cost function<br/>guaranteed quote"]
+
+    FB -- yes --> LMSR
+    FB -- no --> SYNC
+
+    LMSR --> SYNC
+
+    SYNC["<b>syncPositionFromEngines</b><br/>reconcile shared trader state<br/>(cash · YES · NO)"]
+
+    SYNC --> DONE["<b>Return</b><br/>totalFilledQty · remaining<br/>avgFillPrice · finalStatus"]
+
+    %% Styling
+    classDef inStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef decStyle fill:#fff1b3,stroke:#8a6d00,stroke-width:2px,color:#3d2500
+    classDef clobStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef lmsrStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef sharedStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef outStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+
+    class START inStyle
+    class C1,C2,INV,C3,C4,STATUS,FB decStyle
+    class USE_CLOB,TRY,RESTED,MARKET_RES,REJECTED clobStyle
+    class USE_LMSR,LMSR lmsrStyle
+    class SYNC sharedStyle
+    class DONE outStyle

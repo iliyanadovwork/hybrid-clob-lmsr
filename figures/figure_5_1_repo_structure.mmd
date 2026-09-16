@@ -1,0 +1,82 @@
+---
+title: "Figure 5.1 — Repository / Module Structure"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "26px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 55
+    rankSpacing: 85
+---
+flowchart LR
+
+    %% ① Browser-facing interface
+    subgraph UI["① src/app — Browser Interface"]
+        direction TB
+        EXP["<b>experiments/page.tsx</b><br/>sweep runner · dashboard<br/>export (JSON / CSV)"]
+        CLOB_PG["<b>clob-test/page.tsx</b><br/>CLOB playground"]
+        LMSR_PG["<b>lmsr-test/page.tsx</b><br/>LMSR playground"]
+        SHELL["<b>layout.tsx · page.tsx</b><br/>globals.css"]
+    end
+
+    %% ② Simulation core
+    subgraph CORE["② src/lib — Simulation Core"]
+        direction TB
+        COMMON["<b>engine-common.ts</b><br/>UnifiedEngine interface<br/>domain model (OrderIntent,<br/>FillInfo, Snapshot)"]
+        CLOB["<b>clob.ts</b><br/>CLOB core<br/>price-time priority book"]
+        LMSR["<b>binaryLmsr.ts</b><br/>LMSR core<br/>log-sum-exp cost fn"]
+        ADAPT["<b>engine-adapters.ts</b><br/>CLOBEngineAdapter ·<br/>LMSREngineAdapter"]
+        HYB["<b>hybrid-router-v2.ts</b><br/>HybridRouterV2<br/>composes CLOB + LMSR cores"]
+        SIM["<b>simulation.ts</b><br/>SeededRNG · OrderIntentGenerator<br/>SimulationRunner · computeMetrics"]
+    end
+
+    %% ③ Tests
+    subgraph TEST["③ test/ — Automated Tests"]
+        direction TB
+        CLOB_T["<b>clob.*.test.ts</b><br/>property · golden ·<br/>differential · unit"]
+        LMSR_T["<b>binaryLmsr.*.test.ts</b><br/>accounting · math ·<br/>numerical · risk · regression"]
+        HYB_T["<b>hybrid-router-v2.*.test.ts</b><br/>comprehensive + unit"]
+    end
+
+    %% Dependencies (one-way)
+    EXP --> SIM
+    EXP --> ADAPT
+    EXP --> HYB
+    CLOB_PG --> CLOB
+    LMSR_PG --> LMSR
+
+    ADAPT --> CLOB
+    ADAPT --> LMSR
+    ADAPT --> COMMON
+    HYB --> CLOB
+    HYB --> LMSR
+    HYB --> COMMON
+    SIM --> COMMON
+    SIM --> ADAPT
+    SIM --> HYB
+
+    CLOB_T -. "tests" .-> CLOB
+    LMSR_T -. "tests" .-> LMSR
+    HYB_T -. "tests" .-> HYB
+
+    %% Styling
+    classDef uiStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef commonStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef coreStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef simStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef testStyle fill:#ffeccc,stroke:#b36600,stroke-width:2px,color:#3d2500
+
+    class EXP,CLOB_PG,LMSR_PG,SHELL uiStyle
+    class COMMON commonStyle
+    class CLOB,LMSR,ADAPT,HYB coreStyle
+    class SIM simStyle
+    class CLOB_T,LMSR_T,HYB_T testStyle

@@ -1,0 +1,92 @@
+---
+title: "Figure 4.2 — Unified Experimental Pipeline"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "32px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 70
+    rankSpacing: 110
+---
+flowchart LR
+
+    %% ① Experiment Configuration
+    subgraph CFG["① Experiment Configuration"]
+        direction TB
+        CONFIG["<b>Scenario + engine + seed config</b><br/>traders · cash · arrival · spread<br/>tickSize · bParam · thresholds"]
+        SWEEP["<b>buildSweep</b><br/>SCENARIOS × ENGINES × SEEDS<br/>→ SweepTask[]"]
+        CONFIG --> SWEEP
+    end
+
+    %% ② Workload Generation
+    subgraph GEN["② Workload Generation"]
+        direction TB
+        GENFN["<b>OrderIntentGenerator.generate</b><br/>seeded RNG (Mulberry32)<br/>dispatches on ScenarioType"]
+        INTENTS["<b>OrderIntent[]</b><br/>materialised up-front"]
+        GENFN --> INTENTS
+    end
+
+    %% ③ Mechanism Execution
+    subgraph EXEC["③ Mechanism Execution"]
+        direction TB
+        RUN_CTX["<b>Build run context</b><br/>ScenarioConfig · Engine · Runner"]
+        LOOP["<b>for each intent:</b><br/>engine.processOrder → ExecutionResult<br/>getMarketState → Snapshot<br/>getLogs → flush buffer"]
+        RUN_CTX --> LOOP
+    end
+
+    %% ④ Per-Run Metrics
+    subgraph RUNOUT["④ Per-Run Metrics"]
+        direction TB
+        METFN["<b>computeMetrics</b><br/>fill · slippage · impact<br/>spread / depth / price series"]
+        SIMOUT["<b>SimulationOutput</b><br/>config · results · snapshots · metrics"]
+        METFN --> SIMOUT
+    end
+
+    %% ⑤ Cross-Run Aggregation
+    subgraph AGG["⑤ Cross-Run Aggregation"]
+        direction TB
+        RUNS["<b>RunRecord[]</b><br/>one per (scenario, engine, seed)"]
+        AGGFN["<b>aggregateMetrics</b><br/>group by (scenario, engine)<br/>mean over seeds"]
+        ROWS["<b>MetricsRow[]</b><br/>+ chart series + winners"]
+        RUNS --> AGGFN --> ROWS
+    end
+
+    %% ⑥ Output
+    subgraph OUT["⑥ Output"]
+        direction TB
+        DASH["<b>Dashboard views</b><br/>aggregate · time-series<br/>routing split · headline table"]
+        EXP["<b>Export</b><br/>JSON · CSV"]
+    end
+
+    %% Cross-stage flow
+    SWEEP -. "for each task" .-> GENFN
+    SWEEP -. "for each task" .-> RUN_CTX
+    INTENTS --> LOOP
+    LOOP --> METFN
+    SIMOUT -. "push" .-> RUNS
+    ROWS --> DASH
+    ROWS --> EXP
+
+    %% Styling
+    classDef cfgStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+    classDef genStyle fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef execStyle fill:#d4eeda,stroke:#15702f,stroke-width:2px,color:#0b2e15
+    classDef metStyle fill:#ffe7cc,stroke:#b0480f,stroke-width:2px,color:#3d2500
+    classDef aggStyle fill:#ffeccc,stroke:#b36600,stroke-width:2px,color:#3d2500
+    classDef outStyle fill:#dbe8ff,stroke:#1a4fb3,stroke-width:2px,color:#0b1a2b
+
+    class CONFIG,SWEEP cfgStyle
+    class GENFN,INTENTS genStyle
+    class RUN_CTX,LOOP execStyle
+    class METFN,SIMOUT metStyle
+    class RUNS,AGGFN,ROWS aggStyle
+    class DASH,EXP outStyle

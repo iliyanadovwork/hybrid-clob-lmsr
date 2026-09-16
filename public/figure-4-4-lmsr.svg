@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="Helvetica, Arial, sans-serif" font-size="12">
+
+  <!-- ===== defs: arrowhead + styles ===== -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#333"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <style>
+    .box      { fill: #ffffff; stroke: #222; stroke-width: 1.2; rx: 6; ry: 6; }
+    .group    { fill: #f4f6f8; stroke: #444; stroke-width: 1; rx: 8; ry: 8; }
+    .unused   { fill: #fafafa; stroke: #888; stroke-width: 1; stroke-dasharray: 6 4; rx: 8; ry: 8; }
+    .groupTitle { font-weight: bold; font-size: 12.5px; fill: #222; }
+    .label    { font-size: 11.5px; fill: #111; }
+    .small    { font-size: 10.5px; fill: #333; }
+    .edge     { stroke: #333; stroke-width: 1.2; fill: none; }
+    .edge-dashed { stroke: #888; stroke-width: 1.1; fill: none; stroke-dasharray: 5 3; }
+    .math     { font-family: "Cambria Math", "Times New Roman", serif; font-style: italic; }
+  </style>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="24" text-anchor="middle" font-size="15" font-weight="bold">
+    Figure 4.4 — LMSR engine architecture and adapter bridge
+  </text>
+
+  <!-- ========== MarketState group (top-left) ========== -->
+  <rect class="group" x="30" y="50" width="240" height="170"/>
+  <text class="groupTitle" x="50" y="72">MarketState  (binaryLmsr.ts)</text>
+
+  <rect class="box" x="50" y="85"  width="200" height="24"/>
+  <text class="label" x="60" y="101"><tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">YES</tspan> : Decimal</text>
+
+  <rect class="box" x="50" y="115" width="200" height="24"/>
+  <text class="label" x="60" y="131"><tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">NO</tspan>  : Decimal</text>
+
+  <rect class="box" x="50" y="145" width="200" height="24"/>
+  <text class="label" x="60" y="161">totalCollected : Decimal</text>
+
+  <rect class="box" x="50" y="175" width="200" height="24"/>
+  <text class="label" x="60" y="191">settled : bool   ·   outcome?</text>
+
+  <text class="small" x="50" y="214"><tspan class="math">b</tspan> : Decimal   (fixed per run, &gt; 0)</text>
+
+  <!-- ========== Cost &amp; Price group (top-right) ========== -->
+  <rect class="group" x="320" y="50" width="550" height="170"/>
+  <text class="groupTitle" x="340" y="72">Cost and price  (pure functions of state)</text>
+
+  <rect class="box" x="340" y="90" width="510" height="48"/>
+  <text class="label" x="352" y="108"><tspan class="math">C(q)</tspan> = <tspan class="math">b</tspan> · ln( e^(<tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">YES</tspan>/<tspan class="math">b</tspan>) + e^(<tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">NO</tspan>/<tspan class="math">b</tspan>) )</text>
+  <text class="small"  x="352" y="126">_cost — log-sum-exp stabilised (subtract max before exp)</text>
+
+  <rect class="box" x="340" y="150" width="510" height="54"/>
+  <text class="label" x="352" y="168"><tspan class="math">p</tspan><tspan baseline-shift="sub" font-size="9">YES</tspan> = 1 / ( 1 + exp( (<tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">NO</tspan> − <tspan class="math">q</tspan><tspan baseline-shift="sub" font-size="9">YES</tspan>) / <tspan class="math">b</tspan> ) )   ·   <tspan class="math">p</tspan><tspan baseline-shift="sub" font-size="9">NO</tspan> = 1 − <tspan class="math">p</tspan><tspan baseline-shift="sub" font-size="9">YES</tspan></text>
+  <text class="small"  x="352" y="188">_priceYes — sigmoid form, bounded in (0, 1) by construction</text>
+
+  <!-- State → Cost/Price edges -->
+  <path class="edge" d="M 270 110 L 335 110" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 270 175 L 335 175" marker-end="url(#arrow)"/>
+
+  <!-- ========== Quoting primitives group ========== -->
+  <rect class="group" x="30" y="250" width="400" height="150"/>
+  <text class="groupTitle" x="50" y="272">Quoting primitives  (binaryLmsr.ts)</text>
+
+  <rect class="box" x="50" y="288" width="360" height="44"/>
+  <text class="label"  x="62" y="306">quoteQtyBuy(outcome, qty) → payment, avgPrice, prices</text>
+  <text class="small"  x="62" y="322">2 × <tspan class="math">C(q)</tspan> evaluations (before / after)</text>
+
+  <rect class="box" x="50" y="340" width="360" height="48"/>
+  <text class="label"  x="62" y="358">quoteSpendBuy(outcome, spend) → qty, avgPrice</text>
+  <text class="small"  x="62" y="374">bisection solver · ≤ 100 iterations · tol = 10⁻¹²</text>
+
+  <!-- Math → quoting edges -->
+  <path class="edge" d="M 595 205 L 595 235 L 260 235 L 260 288" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 595 205 L 595 235 L 260 235 L 260 340" marker-end="url(#arrow)"/>
+
+  <!-- ========== Adapter group ========== -->
+  <rect class="group" x="470" y="250" width="400" height="150"/>
+  <text class="groupTitle" x="490" y="272">LMSREngineAdapter  (engine-adapters.ts)</text>
+
+  <rect class="box" x="490" y="288" width="360" height="44"/>
+  <text class="label" x="502" y="306">processOrder(intent : OrderIntent) → ExecutionResult</text>
+  <text class="small" x="502" y="322">unified interface shared with CLOB adapter</text>
+
+  <rect class="box" x="490" y="340" width="360" height="48"/>
+  <text class="label" x="502" y="358">adaptation: SELL YES → BUY NO · SELL NO → BUY YES</text>
+  <text class="small" x="502" y="374">LIMIT price is not consulted · slippage = priceImpact = null</text>
+
+  <!-- Adapter → quoting routes -->
+  <path class="edge" d="M 490 312 L 420 312" marker-end="url(#arrow)"/>
+  <text  class="small" x="420" y="305" text-anchor="end">MARKET → quoteSpendBuy</text>
+
+  <path class="edge" d="M 490 364 L 420 364" marker-end="url(#arrow)"/>
+  <text  class="small" x="420" y="357" text-anchor="end">LIMIT  → quoteQtyBuy</text>
+
+  <!-- Quoting → state mutation (via executeBuy / executeBuySpend) -->
+  <rect class="box" x="50" y="430" width="820" height="44"/>
+  <text class="label" x="62"  y="448">executeBuy / executeBuySpend — apply quote, debit trader cash, update q_YES, q_NO, totalCollected</text>
+  <text class="small" x="62"  y="464">only mutation site for MarketState during trading</text>
+
+  <path class="edge" d="M 230 388 L 230 430" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 230 332 L 230 430" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 670 388 L 670 430" marker-end="url(#arrow)"/>
+
+  <!-- Execute → State feedback -->
+  <path class="edge" d="M 100 430 C 70 400 70 260 140 210 L 140 199" marker-end="url(#arrow)"/>
+
+  <!-- ========== Settlement group (dashed, unused by runner) ========== -->
+  <rect class="unused" x="30" y="500" width="840" height="100"/>
+  <text class="groupTitle" x="50" y="522" fill="#555">Settlement  (engine capability — NOT invoked by SimulationRunner)</text>
+
+  <rect class="box" x="50"  y="536" width="240" height="44" stroke="#888"/>
+  <text class="label" x="62" y="554">settle(outcome)</text>
+  <text class="small" x="62" y="570">rejects further quotes after call</text>
+
+  <rect class="box" x="310" y="536" width="240" height="44" stroke="#888"/>
+  <text class="label" x="322" y="554">totalPayout = (outcome ? qYES : qNO) · 1</text>
+  <text class="small" x="322" y="570">one unit per winning share</text>
+
+  <rect class="box" x="570" y="536" width="280" height="44" stroke="#888"/>
+  <text class="label" x="582" y="554">profitLoss = totalCollected − totalPayout</text>
+  <text class="small" x="582" y="570">worstCaseLoss(<tspan class="math">b</tspan>) = <tspan class="math">b</tspan> · ln 2   (helper, unused by runner)</text>
+
+  <path class="edge-dashed" d="M 290 558 L 310 558" marker-end="url(#arrow-dashed)"/>
+  <path class="edge-dashed" d="M 550 558 L 570 558" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Caller note -->
+  <text class="small" x="50" y="598" fill="#555">
+    only live caller: src/app/lmsr-test/page.tsx:308 (manual playground)
+  </text>
+
+</svg>

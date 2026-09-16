@@ -1,0 +1,54 @@
+---
+title: "Simulator Overview — CLOB · LMSR · HYBRID"
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#ffffff"
+    primaryTextColor: "#111111"
+    primaryBorderColor: "#333333"
+    lineColor: "#444444"
+    fontSize: "26px"
+    fontFamily: "Helvetica, Arial, sans-serif"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#9a9a9a"
+  flowchart:
+    htmlLabels: true
+    curve: basis
+    nodeSpacing: 70
+    rankSpacing: 90
+---
+flowchart TB
+
+    WL["<b>Workload Generator</b><br/>seeded · open-loop<br/>THIN · THICK · SHOCK"]
+
+    subgraph ENGINES["Execution Mechanisms"]
+        direction LR
+        CLOB["<b>CLOB</b><br/>price-time priority book"]
+        HYB["<b>HYBRID</b><br/>liquidity-aware router<br/>CLOB ↔ LMSR"]
+        LMSR["<b>LMSR</b><br/>logarithmic cost function"]
+    end
+
+    DASH["<b>Metrics Dashboard</b><br/>fill · slippage · impact<br/>spread · depth · routing split"]
+
+    WL --> CLOB
+    WL --> HYB
+    WL --> LMSR
+
+    CLOB --> DASH
+    HYB --> DASH
+    LMSR --> DASH
+
+    HYB -.routes.-> CLOB
+    HYB -.fallback.-> LMSR
+
+    classDef wlStyle  fill:#ecdcff,stroke:#6b2fbf,stroke-width:2px,color:#1a0b2e
+    classDef clobStyle fill:#dbe8ff,stroke:#2D5BFF,stroke-width:2.5px,color:#0b1a2b
+    classDef lmsrStyle fill:#ccf2eb,stroke:#14B8A6,stroke-width:2.5px,color:#06302a
+    classDef hybStyle  fill:#e8dcff,stroke:#7C3AED,stroke-width:2.5px,color:#1a0b2e
+    classDef dashStyle fill:#ffeccc,stroke:#b36600,stroke-width:2px,color:#3d2500
+
+    class WL wlStyle
+    class CLOB clobStyle
+    class LMSR lmsrStyle
+    class HYB hybStyle
+    class DASH dashStyle

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820"
+     font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <!-- ============================================================
+       Figure 4.1 (slides variant). Simplified high-level architecture.
+       Palette: black #1A1A1A, dark grey #666666, accent #3F6079.
+       Larger fonts, fewer sub-labels, same conceptual message.
+       ============================================================ -->
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3F6079"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="820" fill="white"/>
+
+  <!-- ========== UI LAYER ========== -->
+  <g>
+    <rect x="60" y="30" width="1280" height="120"
+          fill="#FAFAFA" stroke="#666666" stroke-width="1.2" stroke-dasharray="5,3" rx="6"/>
+    <text x="80" y="58" font-size="18" font-weight="600" fill="#1A1A1A">
+      Client-side UI (src/app/)
+    </text>
+
+    <g>
+      <rect x="180" y="78" width="280" height="56" fill="white" stroke="#1A1A1A" stroke-width="2" rx="3"/>
+      <text x="320" y="113" text-anchor="middle" font-size="17" fill="#1A1A1A">/experiments</text>
+    </g>
+    <g>
+      <rect x="560" y="78" width="280" height="56" fill="white" stroke="#1A1A1A" stroke-width="2" rx="3"/>
+      <text x="700" y="113" text-anchor="middle" font-size="17" fill="#1A1A1A">/clob-test</text>
+    </g>
+    <g>
+      <rect x="940" y="78" width="280" height="56" fill="white" stroke="#1A1A1A" stroke-width="2" rx="3"/>
+      <text x="1080" y="113" text-anchor="middle" font-size="17" fill="#1A1A1A">/lmsr-test</text>
+    </g>
+  </g>
+
+  <!-- ========== ABSENT BAND ========== -->
+  <g>
+    <rect x="340" y="178" width="720" height="46"
+          fill="#F2F2F2" stroke="#999999" stroke-width="1.2" stroke-dasharray="4,3" rx="4"/>
+    <line x1="340" y1="178" x2="1060" y2="224" stroke="#999999" stroke-width="1.2"/>
+    <line x1="340" y1="224" x2="1060" y2="178" stroke="#999999" stroke-width="1.2"/>
+    <text x="700" y="208" text-anchor="middle" font-size="14" font-weight="600" fill="#666666">
+      No backend API / no Route Handler layer
+    </text>
+  </g>
+
+  <!-- ========== DIRECT IMPORT ARROWS ========== -->
+  <g stroke="#3F6079" stroke-width="2.2" fill="none" marker-end="url(#arrow-accent)">
+    <line x1="320"  y1="148" x2="320"  y2="260"/>
+    <line x1="700"  y1="148" x2="700"  y2="260"/>
+    <line x1="1080" y1="148" x2="1080" y2="260"/>
+  </g>
+  <text x="130" y="210" font-size="14" font-style="italic" fill="#3F6079">direct import</text>
+
+  <!-- ========== SIMULATION CORE ========== -->
+  <g>
+    <rect x="60" y="260" width="1280" height="510"
+          fill="#FAFAFA" stroke="#666666" stroke-width="1.2" stroke-dasharray="5,3" rx="6"/>
+    <text x="80" y="288" font-size="18" font-weight="600" fill="#1A1A1A">
+      Simulation core (src/lib/)
+    </text>
+
+    <!-- Runner -->
+    <g>
+      <rect x="540" y="308" width="320" height="60"
+            fill="white" stroke="#1A1A1A" stroke-width="2.2" rx="3"/>
+      <text x="700" y="345" text-anchor="middle" font-size="17" font-weight="600" fill="#1A1A1A">
+        Simulation Runner
+      </text>
+    </g>
+
+    <line x1="700" y1="368" x2="700" y2="405"
+          stroke="#1A1A1A" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+    <!-- UnifiedEngine interface bar -->
+    <g>
+      <rect x="140" y="408" width="1120" height="64"
+            fill="white" stroke="#3F6079" stroke-width="3" rx="4"/>
+      <text x="700" y="438" text-anchor="middle" font-size="17" font-weight="600" fill="#1A1A1A">
+        Common engine interface
+      </text>
+      <text x="700" y="460" text-anchor="middle" font-size="15" fill="#3F6079"
+            font-family="Menlo, Monaco, Consolas, monospace">UnifiedEngine</text>
+    </g>
+
+    <!-- arrows down -->
+    <g stroke="#1A1A1A" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+      <line x1="290"  y1="472" x2="290"  y2="520"/>
+      <line x1="700"  y1="472" x2="700"  y2="520"/>
+      <line x1="1110" y1="472" x2="1110" y2="520"/>
+    </g>
+
+    <!-- CLOB column -->
+    <g>
+      <rect x="130" y="520" width="320" height="220"
+            fill="#F5F5F5" stroke="#999999" stroke-width="1" stroke-dasharray="3,3" rx="4"/>
+      <text x="290" y="544" text-anchor="middle" font-size="14" font-weight="600" fill="#1A1A1A">CLOB</text>
+
+      <rect x="155" y="556" width="270" height="54" fill="white" stroke="#1A1A1A" stroke-width="1.8" rx="3"/>
+      <text x="290" y="589" text-anchor="middle" font-size="15" fill="#1A1A1A">CLOBEngineAdapter</text>
+
+      <line x1="290" y1="610" x2="290" y2="650"
+            stroke="#1A1A1A" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <rect x="155" y="650" width="270" height="54" fill="white" stroke="#1A1A1A" stroke-width="1.8" rx="3"/>
+      <text x="290" y="683" text-anchor="middle" font-size="15" fill="#1A1A1A">CLOBEngine</text>
+
+      <text x="290" y="724" text-anchor="middle" font-size="12" font-style="italic" fill="#3F6079">
+        adapter wraps mechanism
+      </text>
+    </g>
+
+    <!-- LMSR column -->
+    <g>
+      <rect x="540" y="520" width="320" height="220"
+            fill="#F5F5F5" stroke="#999999" stroke-width="1" stroke-dasharray="3,3" rx="4"/>
+      <text x="700" y="544" text-anchor="middle" font-size="14" font-weight="600" fill="#1A1A1A">LMSR</text>
+
+      <rect x="565" y="556" width="270" height="54" fill="white" stroke="#1A1A1A" stroke-width="1.8" rx="3"/>
+      <text x="700" y="589" text-anchor="middle" font-size="15" fill="#1A1A1A">LMSREngineAdapter</text>
+
+      <line x1="700" y1="610" x2="700" y2="650"
+            stroke="#1A1A1A" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <rect x="565" y="650" width="270" height="54" fill="white" stroke="#1A1A1A" stroke-width="1.8" rx="3"/>
+      <text x="700" y="683" text-anchor="middle" font-size="15" fill="#1A1A1A">BinaryLMSR</text>
+
+      <text x="700" y="724" text-anchor="middle" font-size="12" font-style="italic" fill="#3F6079">
+        adapter wraps mechanism
+      </text>
+    </g>
+
+    <!-- Hybrid column -->
+    <g>
+      <rect x="950" y="520" width="320" height="220"
+            fill="#F5F5F5" stroke="#999999" stroke-width="1" stroke-dasharray="3,3" rx="4"/>
+      <text x="1110" y="544" text-anchor="middle" font-size="14" font-weight="600" fill="#1A1A1A">Hybrid</text>
+
+      <rect x="975" y="556" width="270" height="54" fill="white" stroke="#1A1A1A" stroke-width="1.8" rx="3"/>
+      <text x="1110" y="589" text-anchor="middle" font-size="15" fill="#1A1A1A">HybridRouterV2</text>
+
+      <text x="1110" y="630" text-anchor="middle" font-size="11" font-style="italic" fill="#666666">
+        internally composes
+      </text>
+
+      <rect x="985" y="642" width="115" height="50" fill="white" stroke="#1A1A1A" stroke-width="1.2" rx="3"/>
+      <text x="1042" y="673" text-anchor="middle" font-size="13" fill="#1A1A1A">CLOBEngine</text>
+
+      <rect x="1120" y="642" width="115" height="50" fill="white" stroke="#1A1A1A" stroke-width="1.2" rx="3"/>
+      <text x="1177" y="673" text-anchor="middle" font-size="13" fill="#1A1A1A">BinaryLMSR</text>
+
+      <text x="1110" y="724" text-anchor="middle" font-size="12" font-style="italic" fill="#3F6079">
+        implements interface directly
+      </text>
+    </g>
+  </g>
+
+  <!-- Caption -->
+  <text x="700" y="805" text-anchor="middle" font-size="13" font-weight="600" fill="#1A1A1A">
+    Figure 4.1. High-level architecture of the implemented simulator
+  </text>
+</svg>

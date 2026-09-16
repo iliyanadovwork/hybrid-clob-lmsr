@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 780" font-family="Helvetica, Arial, sans-serif" font-size="12">
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#222"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <style>
+    .box       { fill: #ffffff; stroke: #222; stroke-width: 1.2; }
+    .rounded   { rx: 8; ry: 8; }
+    .dec       { fill: #fff8e7; stroke: #a07b00; stroke-width: 1.2; }
+    .terminal  { fill: #eaf4ea; stroke: #2f6f2f; stroke-width: 1.2; }
+    .terminal-alt{ fill: #f4eaea; stroke: #7a2a2a; stroke-width: 1.2; }
+    .aux       { fill: #eef2f7; stroke: #3a4a5c; stroke-width: 1.2; }
+    .note      { fill: #fafafa; stroke: #888; stroke-width: 1; stroke-dasharray: 5 3; }
+    .edge      { stroke: #222; stroke-width: 1.2; fill: none; }
+    .edge-muted{ stroke: #888; stroke-width: 1.1; fill: none; stroke-dasharray: 5 3; }
+    .lbl       { font-size: 11.5px; fill: #111; }
+    .small     { font-size: 10.5px; fill: #333; }
+    .title     { font-size: 15px; font-weight: bold; fill: #111; }
+    .sub       { font-weight: bold; font-size: 12px; fill: #111; }
+    .ylbl      { font-size: 10.5px; fill: #222; }
+  </style>
+
+  <!-- Title -->
+  <text x="440" y="26" text-anchor="middle" class="title">
+    Figure 4.5 — Hybrid controller routing (SPREAD_BASED, UI-exposed path)
+  </text>
+
+  <!-- Start -->
+  <rect class="terminal rounded" x="340" y="46"  width="200" height="36"/>
+  <text class="lbl" x="440" y="69" text-anchor="middle">Incoming OrderIntent</text>
+
+  <!-- Sync in -->
+  <rect class="aux rounded" x="310" y="100" width="260" height="36"/>
+  <text class="lbl" x="440" y="123" text-anchor="middle">
+    syncPositionToEngines(traderId)
+  </text>
+  <text class="small" x="440" y="138" text-anchor="middle">cash / YES / NO pushed into both ledgers</text>
+
+  <!-- Spread check -->
+  <polygon class="dec" points="440,168 640,213 440,258 240,213"/>
+  <text class="lbl"  x="440" y="208" text-anchor="middle">spread defined AND</text>
+  <text class="lbl"  x="440" y="223" text-anchor="middle">spread &gt; maxSpread ?</text>
+
+  <!-- Spread: yes -> disqualify CLOB -->
+  <rect class="aux rounded" x="655" y="195" width="195" height="36"/>
+  <text class="lbl" x="752" y="218" text-anchor="middle">CLOB disqualified</text>
+
+  <!-- Spread: no -> side check -->
+  <polygon class="dec" points="440,278 600,318 440,358 280,318"/>
+  <text class="lbl" x="440" y="323" text-anchor="middle">side = SELL ?</text>
+
+  <!-- SELL: inventory check -->
+  <polygon class="dec" points="200,355 360,395 200,435 40,395"/>
+  <text class="lbl" x="200" y="392" text-anchor="middle">shared YES shares &gt; 0 ?</text>
+  <text class="small" x="200" y="407" text-anchor="middle">(checks YES only — see Chapter 5)</text>
+
+  <!-- BUY branch marker -->
+  <text class="ylbl" x="525" y="345">no — BUY</text>
+  <text class="ylbl" x="330" y="345">yes</text>
+
+  <!-- SELL inv: no -> disqualify CLOB -->
+  <path class="edge" d="M 40 395 L 20 395 L 20 213 L 240 213" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="26" y="305" transform="rotate(-90 26 305)">no</text>
+
+  <!-- SELL inv: yes -> type check -->
+  <polygon class="dec" points="440,388 640,432 440,475 240,432"/>
+  <text class="lbl" x="440" y="424" text-anchor="middle">orderType = MARKET ?</text>
+  <text class="small" x="440" y="440" text-anchor="middle">(depth check applies to MARKET only)</text>
+
+  <!-- Connect BUY (Spread no) and SELL-inv(yes) -->
+  <path class="edge" d="M 440 358 L 440 388" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 200 435 L 200 465 L 240 465 L 240 450 L 280 432" marker-end="url(#arrow)"/>
+
+  <!-- MARKET: depth check -->
+  <polygon class="dec" points="440,500 640,540 440,580 240,540"/>
+  <text class="lbl" x="440" y="536" text-anchor="middle">opposing depth (3 levels)</text>
+  <text class="lbl" x="440" y="551" text-anchor="middle">&gt;= minDepth ?</text>
+
+  <!-- Depth: no -> CLOB disqualified -->
+  <path class="edge" d="M 640 540 C 730 540 770 430 760 236 L 760 231" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="680" y="532">no</text>
+
+  <!-- LIMIT skip depth -->
+  <text class="ylbl" x="215" y="425">no (LIMIT)</text>
+  <path class="edge" d="M 240 432 L 200 432 L 200 610 L 360 610" marker-end="url(#arrow)"/>
+
+  <!-- MARKET yes -->
+  <text class="ylbl" x="440" y="470">yes</text>
+  <text class="ylbl" x="440" y="596">yes</text>
+
+  <!-- Execute CLOB -->
+  <rect class="aux rounded" x="360" y="600" width="200" height="42"/>
+  <text class="lbl" x="460" y="622" text-anchor="middle">tryExecuteOnCLOB</text>
+  <text class="small" x="460" y="636" text-anchor="middle">limit / market on live book</text>
+
+  <!-- Depth yes -> execute CLOB -->
+  <path class="edge" d="M 440 580 L 440 600" marker-end="url(#arrow)"/>
+
+  <!-- CLOB disqualified -> BUY-side LMSR fallback? -->
+  <polygon class="dec" points="752,250 870,280 752,310 634,280"/>
+  <text class="lbl" x="752" y="284" text-anchor="middle">side = BUY ?</text>
+
+  <path class="edge" d="M 752 231 L 752 250" marker-end="url(#arrow)"/>
+
+  <!-- CLOB-disq: BUY yes -> LMSR full -->
+  <rect class="aux rounded" x="650" y="340" width="210" height="42"/>
+  <text class="lbl" x="755" y="362" text-anchor="middle">executeOnLMSR (full qty)</text>
+  <text class="small" x="755" y="376" text-anchor="middle">BUY only</text>
+  <path class="edge" d="M 752 310 L 755 340" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="760" y="330">BUY</text>
+
+  <!-- CLOB-disq: SELL no -> fail -->
+  <rect class="terminal-alt rounded" x="650" y="405" width="210" height="38"/>
+  <text class="lbl" x="755" y="427" text-anchor="middle">Unfilled SELL</text>
+  <path class="edge" d="M 825 290 C 870 310 880 360 830 405" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="840" y="350">SELL</text>
+
+  <!-- After CLOB: remainder on BUY? -->
+  <polygon class="dec" points="460,660 620,698 460,735 300,698"/>
+  <text class="lbl" x="460" y="695" text-anchor="middle">remainingQty &gt; 0 AND</text>
+  <text class="lbl" x="460" y="710" text-anchor="middle">side = BUY ?</text>
+
+  <path class="edge" d="M 460 642 L 460 660" marker-end="url(#arrow)"/>
+
+  <!-- Yes -> LMSR remainder -->
+  <rect class="aux rounded" x="625" y="678" width="235" height="40"/>
+  <text class="lbl" x="742" y="700" text-anchor="middle">executeOnLMSR (remainder)</text>
+  <text class="small" x="742" y="714" text-anchor="middle">BUY only</text>
+  <path class="edge" d="M 620 698 L 625 698" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="625" y="690">yes</text>
+
+  <!-- No -> done -->
+  <rect class="terminal rounded" x="85" y="678" width="215" height="40"/>
+  <text class="lbl" x="192" y="700" text-anchor="middle">Aggregate &amp; return</text>
+  <text class="small" x="192" y="714" text-anchor="middle">ExecutionResult + ROUTING_DECISION logs</text>
+  <path class="edge" d="M 300 698 L 300 698 L 300 698" />
+  <path class="edge" d="M 300 698 L 300 698" />
+  <path class="edge" d="M 300 698 L 300 718 L 300 718" />
+  <path class="edge" d="M 300 698 L 300 718 L 300 718 L 300 698" />
+  <path class="edge" d="M 300 698 L 302 698" />
+  <path class="edge" d="M 300 698 L 300 700 L 300 718" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 300 718 L 300 718" />
+  <path class="edge" d="M 300 698 L 305 698 L 305 718 L 300 718" />
+
+  <!-- Clean single arrow from "no" branch to Aggregate -->
+  <path class="edge" d="M 300 698 L 300 698" />
+  <path class="edge" d="M 300 698 L 300 700" />
+
+  <!-- Simple path: no-branch out of decision to Aggregate -->
+  <path class="edge" d="M 300 698 L 200 698" marker-end="url(#arrow)"/>
+  <text class="ylbl" x="300" y="690">no</text>
+
+  <!-- LMSR paths -> Aggregate -->
+  <path class="edge" d="M 742 718 C 742 770 400 770 200 740 L 200 720" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 755 382 C 550 460 320 520 200 678" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 755 443 C 560 500 330 560 200 678" marker-end="url(#arrow)"/>
+
+  <!-- State footer -->
+  <rect class="note rounded" x="60" y="60" width="225" height="110"/>
+  <text class="sub" x="75" y="78">Controller state (not stateless)</text>
+  <text class="small" x="75" y="96">- clobLedger · lmsrLedger</text>
+  <text class="small" x="75" y="112">- sharedPositions per trader</text>
+  <text class="small" x="75" y="128">- logs · routing stats</text>
+  <text class="small" x="75" y="148">Routing reads CLOB spread + depth</text>
+  <text class="small" x="75" y="162">and shared YES inventory (for SELL)</text>
+
+  <rect class="note rounded" x="595" y="60" width="265" height="110"/>
+  <text class="sub" x="608" y="78">UI-exposed parameters</text>
+  <text class="small" x="608" y="96">- maxSpread  (live)</text>
+  <text class="small" x="608" y="112">- minDepth  (live, MARKET only)</text>
+  <text class="small" x="608" y="128">- depthTicks  (accepted, not consulted;</text>
+  <text class="small" x="608" y="142">  routing uses fixed 3-level window)</text>
+  <text class="small" x="608" y="162">Routing mode is fixed to SPREAD_BASED</text>
+
+</svg>
